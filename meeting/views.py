@@ -17,6 +17,9 @@ from django.contrib import messages
 
 from django.db.models import F
 
+# import pandas as pd
+import tablib
+
 # Create your views here.
 
 
@@ -49,6 +52,24 @@ def newmember(request):
     }
 
     return HttpResponse(template.render(context, request))
+
+
+@login_required(login_url='/admin')
+def export(request):
+    members = Attendee.objects.all().values_list('name', 'email', 'mobile')
+
+    headers = ('Full Name', 'Email', 'Mobile Number')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    # print(members)
+    for member in list(members):
+        print(member)
+        data.append(member)
+    response = HttpResponse(
+        data.xlsx, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=export.xlsx"
+
+    return response
 
 
 ######################
