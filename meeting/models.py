@@ -24,7 +24,5 @@ class AttendanceRecord(models.Model):
     member = models.ForeignKey(Attendee, models.SET_NULL, null=True)
     record_date = models.DateTimeField('date published')
 
-    # bet = models.ForeignKey(Attendee)  # on_delete=models.CASCADE
-
     def __str__(self):
-        return str(self.id)
+        return self.member.name + " " + str(self.record_date)
