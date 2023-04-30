@@ -128,7 +128,12 @@ def add_new_member(request):
         )
 
         new_member.save()
+      
+        new_attend = AttendanceRecord.objects.create(
+            member=new_member, record_date=datetime.now())
 
+        new_attend.save()
+      
         messages.success(request, 'You have been added successfully !')
 
         return HttpResponseRedirect('/thankyou')
