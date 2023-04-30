@@ -22,6 +22,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('thankyou/', views.thankyou, name='thankyou'),
     path('newmember/', views.newmember, name='newmember'),
+    path('export/', views.export, name='export'),
 
     #POST Methods
     path('addattendance/', views.add_attendance, name='addattendance'),
