@@ -23,10 +23,12 @@ urlpatterns = [
     path('thankyou/', views.thankyou, name='thankyou'),
     path('newmember/', views.newmember, name='newmember'),
     path('export/', views.export, name='export'),
+    path('import/', views.data_import, name='import'),
 
     #POST Methods
     path('addattendance/', views.add_attendance, name='addattendance'),
     path('addmember/', views.add_new_member, name='addnewmember'),
+    path('importdata/', views.importdata, name='importdata'),
 
     # ex: /bet/details/
     # path('bets/', views.details, name='details'),
