@@ -13,14 +13,11 @@ class Attendee(models.Model):
     def __str__(self):
         return self.name + "," + str(self.id)
 
-    # def getdetails(self):
-    #     return {"player_name": self.player_name,
-    #     "player_choice": self.choice ,
-    #     "bet_id" :self.bet.id
-    #     , "bet_text":self.bet.bet_text
-    #     , 'bet_solution' : self.bet.solution,
-    #     'bet_value': self.value,
-    #     'bet_owner':self.bet.owner}
+    # def export(self):
+    #     queryset = self._meta.objects.all()
+    #     # can use the below method also
+    #     # queryset = self.__class__.objects.all()
+    #     return queryset
 
 
 class AttendanceRecord(models.Model):
