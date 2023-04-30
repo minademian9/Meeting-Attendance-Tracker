@@ -1,0 +1,35 @@
+{% extends "template.html" %}
+
+
+{% block title %} Add your details  {% endblock %}
+
+
+{% block content %}
+
+<h1> Please add your details below </h1>
+
+<br> <br>
+
+<form  action="/addmember/" method="post">
+    {% csrf_token %}
+  <div class="form-group">
+    <label for="exampleFormControlInput1">Full Name</label>
+    <input type="text" class="form-control" name="full_name" placeholder="Mina Fadl">
+  </div>
+
+   <div class="form-group">
+    <label for="exampleFormControlInput1">Email address</label>
+    <input type="email" class="form-control" name="email_address" placeholder="mina_fadl@example.com">
+  </div>
+
+     <div class="form-group">
+    <label for="exampleFormControlInput1">Mobile Number</label>
+    <input type="number" class="form-control" name="mobile_number" placeholder="010012314434">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+{% endblock %}

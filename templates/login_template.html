@@ -1,0 +1,48 @@
+{% extends "template.html" %}
+
+
+{% block title %} Homepage {% endblock %}
+
+
+{% block content %}
+
+{% if not user.is_authenticated %} 
+
+<div class="container">
+ 	
+<a href="/login" class="btn btn-primary btn-lg btn-block">Login</a>
+<br>
+
+</div>
+ {% endif %}
+
+{% if  user.is_authenticated %}
+
+<div class="container">
+
+Welcome {{ request.user}}
+
+  
+ {% endif %}
+
+  <div class="form-group" id="registerform" >
+            <div class="">
+                <form id="jsonForm"   action="/addbet/" method="post">
+                            {% csrf_token %}
+                  
+                    <div class="input-field">
+                        <input class="form-control" placeholder="What is the bet ?" required id="bet_text" name="bet_text" type="text" class="validate">
+                    </div>
+                  
+                    <br>
+                    <br>
+                 
+
+                    <div class="">
+                        <button type="submit" class="waves-effect btn btn-default">SUBMIT</button>
+                    </div>
+
+                </form>
+        </div>
+
+{% endblock %}

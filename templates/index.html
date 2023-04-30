@@ -1,0 +1,83 @@
+{% extends "template.html" %}
+
+
+{% block title %} Attendance  {% endblock %}
+
+
+{% block content %}
+
+  <h1>Welcome to Potter's Grad Meeting Attendance</h1>
+
+  <div class="container">
+
+    <div class="row height d-flex justify-content-center align-items-center">
+
+      <div class="col-md-6">
+
+        <div class="form">
+
+          <i class="fa fa-search"></i>
+          <input type="text" id="myInput" onkeyup="filterNames()" class="form-control form-input"
+            placeholder="Filter Names....">
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  </br>
+
+
+
+
+  <!-- Main Container -->
+  <div class="container">
+
+
+<a class="btn btn-primary" target="_blank" href="/newmember/">New Member?</a>
+      <br> <br>
+
+          <!-- New Member form  -->
+    
+    <div class="list-group" id="namesList" role="tablist">
+
+
+
+
+      
+         {% if all_members %}
+
+      <form id="jsonForm"  enctype="application/x-www-form-urlencoded" action="/addattendance/" method="post">
+                     {% csrf_token %}
+             {% for mem in all_members %}
+      
+                 <!-- <input class="list-group-item list-group-item-action" id="your_name" type="text" placeholder="{{mem.name}}" value="{{mem.name}}"> -->
+         <button class="list-group-item list-group-item-action" id="your_name" type="json" name="{{ mem.name}},{{mem.id}}">{{ mem.name }} </button>
+
+
+               {% endfor %}
+
+               <!-- <button class="btn btn-primary" id="your_name" type="text" name="test">Submit </button> -->
+
+      </form>
+
+      
+      {% else %}
+
+      <a href="#" class="list-group-item list-group-item-action">No members found</a>
+{% endif %}
+      
+    </div>
+
+
+    
+  </div>
+
+  <!--  End Main Container -->
+
+
+{% endblock %}
