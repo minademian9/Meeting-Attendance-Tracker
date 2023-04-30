@@ -1,0 +1,21 @@
+{% extends "template.html" %}
+
+
+{% block title %} Import Users  {% endblock %}
+
+
+{% block content %}
+
+<h1> Upload Excel file</h1>
+
+<form  action="/importdata/" method="post" enctype="multipart/form-data">
+  
+<input type="file" class="form-control" id="customFile" name="datafile"/>
+  
+<br>
+  
+  <button type="submit" class="btn btn-primary">Upload</button>
+
+</form>
+
+{% endblock %}
