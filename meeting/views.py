@@ -72,6 +72,16 @@ def export(request):
     return response
 
 
+@login_required(login_url='/admin')
+def data_import(request):
+    template = loader.get_template('import.html')
+    context = {
+        # 'all_members': members,
+    }
+
+    return HttpResponse(template.render(context, request))
+
+
 ######################
 # Post Methods
 #####################
@@ -127,6 +137,39 @@ def add_new_member(request):
         print("Failed to add new member -->", e)
 
     return HttpResponseRedirect('/newmember')
+
+
+@csrf_exempt
+@require_POST
+def importdata(request):
+    print("Data to import ", request.POST)
+    # filename = request.POST['datafile']
+    print("File ", request.FILES['datafile'])
+
+    try:
+        dataset = tablib.Dataset()
+        new_members = request.FILES['datafile']
+        # imported_data = dataset.load(new_members.read().decode('utf-8'),format='xlsx')
+        imported_data = dataset.load(new_members.read(), format='xlsx')
+        # print(imported_data)
+
+    except Exception as e:
+        print("Failed to parse -->", e)
+
+    try:
+        print("Importing members")
+        for row in imported_data:
+            new_member = Attendee.objects.create(
+                name=row[0],
+                email=row[1],
+                mobile=row[2],
+            )
+            new_member.save()
+
+    except Exception as e:
+        print("Failed to add -->", e)
+
+    return HttpResponseRedirect('/')
 
 
 # @login_required(login_url='/')
