@@ -24,6 +24,7 @@ urlpatterns = [
     path('newmember/', views.newmember, name='newmember'),
     path('export/', views.export, name='export'),
     path('import/', views.data_import, name='import'),
+    path('db/', views.download_database, name='download_db'),
 
     #POST Methods
     path('addattendance/', views.add_attendance, name='addattendance'),
