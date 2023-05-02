@@ -15,7 +15,9 @@ from .models import Attendee, AttendanceRecord
 
 from django.contrib import messages
 
-from django.db.models import F
+# from django.db.models import F
+
+from django.conf import settings
 
 # import pandas as pd
 import tablib
@@ -82,6 +84,17 @@ def data_import(request):
     return HttpResponse(template.render(context, request))
 
 
+@login_required(login_url='/admin')
+def download_database(request):
+    db_path = settings.DATABASES['default']['NAME']
+    # dbfile = File(open(db_path, "rb"))
+    dbfile = open(db_path, "rb")
+    response = HttpResponse(dbfile, content_type='application/x-sqlite3')
+    response['Content-Disposition'] = 'attachment; filename=%s' % 'db.sqlite3'
+    # response['Content-Length'] = dbfile.size
+    return response
+
+
 ######################
 # Post Methods
 #####################
@@ -128,12 +141,12 @@ def add_new_member(request):
         )
 
         new_member.save()
-      
+
         new_attend = AttendanceRecord.objects.create(
             member=new_member, record_date=datetime.now())
 
         new_attend.save()
-      
+
         messages.success(request, 'You have been added successfully !')
 
         return HttpResponseRedirect('/thankyou')
