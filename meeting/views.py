@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required
 
 from django.template import loader
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 
 from .models import Attendee, AttendanceRecord
 
@@ -95,6 +96,36 @@ def download_database(request):
     return response
 
 
+@login_required(login_url='/admin')
+def dashboard(request):
+    #Get Last Saturday
+    today = datetime.today()
+    idx = (today.weekday() + 1) % 7  # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
+    last_sat = today - timedelta(7 + idx - 6)
+
+    template = loader.get_template('dashboard.html')
+
+    last_sat = make_aware(last_sat)
+
+    print(last_sat.day)
+    # all_records = AttendanceRecord.objects.all()
+    all_records = AttendanceRecord.objects.filter(
+        record_date__year=last_sat.year,
+        record_date__month=last_sat.month,
+        record_date__day=last_sat.day)
+    # all_records = AttendanceRecord.objects.filter(record_date=last_sat)
+    formatted_records = []
+
+    for rec in all_records:
+        formatted_records.append({"name": rec.member, "date": rec.record_date})
+
+    context = {
+        'all_attendance': formatted_records,
+    }
+
+    return HttpResponse(template.render(context, request))
+
+
 ######################
 # Post Methods
 #####################
@@ -108,16 +139,28 @@ def add_attendance(request):
     member_id = list(request.POST.keys())[1].split(',')[1]
     print("id", member_id)
 
+    last_sat = datetime.now()
+    last_sat = make_aware(last_sat)
+  
     try:
 
         member = Attendee.objects.get(id=member_id)
         print("member ----- ", member)
-        new_attend = AttendanceRecord.objects.create(
-            member=member, record_date=datetime.now())
+        already_added = AttendanceRecord.objects.filter(
+            member__id=member.id,
+            record_date__year=last_sat.year,
+            record_date__month=last_sat.month,
+            record_date__day=last_sat.day)
 
-        new_attend.save()
+        # print("already added ????", already_added)
+      
+        if len(already_added) <= 0:
+          new_attend = AttendanceRecord.objects.create(
+              member=member, record_date=make_aware(datetime.now()))
+  
+          new_attend.save()
 
-        messages.success(request, 'Attendance Recorded !')
+          messages.success(request, 'Attendance Recorded !')
         return HttpResponseRedirect('/thankyou')
     except Exception as e:
         print("Failed to add new attendance -->", e)
