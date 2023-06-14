@@ -1,0 +1,35 @@
+{% extends "template.html" %}
+
+
+{% block title %} Dashboard  {% endblock %}
+
+
+{% block content %}
+
+
+
+  <h1>Dashboard</h1>
+
+<br>
+<br>
+
+
+<h3>Last Saturday </h3>
+
+<h3> {{all_attendance|length }} </h3>
+
+
+<span class="border border-dark">
+  {% for record in all_attendance %}
+
+<ol class="list-group">
+  <li class="list-group-item">{{record.name}}</li>
+
+</ol>
+
+
+{% endfor %}
+
+  </span>
+
+{% endblock %}
