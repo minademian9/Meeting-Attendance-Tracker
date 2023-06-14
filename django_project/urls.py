@@ -25,6 +25,7 @@ urlpatterns = [
     path('export/', views.export, name='export'),
     path('import/', views.data_import, name='import'),
     path('db/', views.download_database, name='download_db'),
+    path('dashboard/', views.dashboard, name='dashboard'),
 
     #POST Methods
     path('addattendance/', views.add_attendance, name='addattendance'),
