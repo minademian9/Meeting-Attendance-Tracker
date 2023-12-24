@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.template import loader
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.utils.timezone import make_aware
 
 from .models import Attendee, AttendanceRecord
@@ -66,11 +66,68 @@ def export(request):
     data = tablib.Dataset(*data, headers=headers)
     # print(members)
     for member in list(members):
-        print(member)
+        # print(member)
         data.append(member)
     response = HttpResponse(
         data.xlsx, content_type='application/vnd.ms-excel;charset=utf-8')
     response['Content-Disposition'] = "attachment; filename=export.xlsx"
+
+    return response
+
+
+@login_required(login_url='/admin')
+def export_attendance(request):
+    attendance = AttendanceRecord.objects.all(
+    )  #.values_list('member', 'record_date')
+
+    headers = ('Full Name', 'Attendance Count')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+
+    counter = {}
+    results = attendance.values()
+    # print(results)
+    for record in list(results):
+        member = Attendee.objects.get(id=record['member_id'])
+        # print(member.name)
+        if member.name in counter.keys():
+            counter[member.name] = counter[member.name] + 1
+        else:
+            counter[member.name] = 1
+
+    print(counter)
+    for c in counter:
+        data.append([c, counter[c]])
+
+    response = HttpResponse(
+        data.xlsx, content_type='application/vnd.ms-excel;charset=utf-8')
+    response[
+        'Content-Disposition'] = "attachment; filename=export_attendance.xlsx"
+
+    return response
+    # return HttpResponse("Done")
+
+
+@login_required(login_url='/admin')
+def export_records(request):
+    records = AttendanceRecord.objects.all().values_list(
+        'member', 'record_date')
+
+    headers = ('Full Name', 'Attendance Date')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    # print(members)
+    for rec in list(records):
+        # print()
+        datetime_element = rec[1].date()  # Extracting the date
+        date = datetime_element.strftime('%m/%d/%Y')
+        row = (Attendee.objects.get(id=rec[0]).name, date)
+        print(row)
+        data.append(row)
+    response = HttpResponse(
+        data.xlsx, content_type='application/vnd.ms-excel;charset=utf-8')
+    response[
+        'Content-Disposition'] = "attachment; filename=export-records.xlsx"
 
     return response
 
@@ -101,13 +158,17 @@ def dashboard(request):
     #Get Last Saturday
     today = datetime.today()
     idx = (today.weekday() + 1) % 7  # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
-    last_sat = today - timedelta(7 + idx - 6)
-
+    print(f"the idx= {idx}")
+    if idx == 6:
+        last_sat = today
+    else:
+        last_sat = today - timedelta(7 + idx - 6)
+    print(f"last saturday = {last_sat}")
     template = loader.get_template('dashboard.html')
 
     last_sat = make_aware(last_sat)
 
-    print(last_sat.day)
+    # print(last_sat.day)
     # all_records = AttendanceRecord.objects.all()
     all_records = AttendanceRecord.objects.filter(
         record_date__year=last_sat.year,
@@ -121,6 +182,17 @@ def dashboard(request):
 
     context = {
         'all_attendance': formatted_records,
+        'saturday_date': last_sat.now().strftime("%Y-%m-%d"),
+    }
+
+    return HttpResponse(template.render(context, request))
+
+
+@login_required(login_url='/admin')
+def export_date_range_page(request):
+    template = loader.get_template('export_date_range.html')
+    context = {
+        # 'all_members': members,
     }
 
     return HttpResponse(template.render(context, request))
@@ -141,7 +213,7 @@ def add_attendance(request):
 
     last_sat = datetime.now()
     last_sat = make_aware(last_sat)
-  
+
     try:
 
         member = Attendee.objects.get(id=member_id)
@@ -153,14 +225,14 @@ def add_attendance(request):
             record_date__day=last_sat.day)
 
         # print("already added ????", already_added)
-      
-        if len(already_added) <= 0:
-          new_attend = AttendanceRecord.objects.create(
-              member=member, record_date=make_aware(datetime.now()))
-  
-          new_attend.save()
 
-          messages.success(request, 'Attendance Recorded !')
+        if len(already_added) <= 0:
+            new_attend = AttendanceRecord.objects.create(
+                member=member, record_date=make_aware(datetime.now()))
+
+            new_attend.save()
+
+            messages.success(request, 'Attendance Recorded !')
         return HttpResponseRedirect('/thankyou')
     except Exception as e:
         print("Failed to add new attendance -->", e)
@@ -181,6 +253,7 @@ def add_new_member(request):
             name=request.POST['full_name'],
             email=request.POST['email_address'],
             mobile=request.POST['mobile_number'],
+            date_created=datetime.now(),
         )
 
         new_member.save()
@@ -224,6 +297,7 @@ def importdata(request):
                 name=row[0],
                 email=row[1],
                 mobile=row[2],
+                date_created=datetime.now(),
             )
             new_member.save()
 
@@ -233,178 +307,97 @@ def importdata(request):
     return HttpResponseRedirect('/')
 
 
-# @login_required(login_url='/')
-# def details(request):
-#     all_bets = Bet.objects.all()
-#     template = loader.get_template('bet/viewbets.html')
-#     context = {
-#         'all_bets': all_bets,
-#     }
-#     return HttpResponse(template.render(context, request))
+#--------- Helper Date Functions ---------#
+def get_saturdays(start_date, end_date):
+    saturdays = []
+    for single_date in daterange(start_date, end_date):
+        if single_date.weekday() == 5:  # Saturday is represented by 5
+            saturdays.append(single_date)
+    return saturdays
 
-# @login_required(login_url='/')
-# def accountView(request):
-#     template = loader.get_template('bet/viewaccount.html')
 
-#     context = {
-#         # 'all_bets': all_bets,
-#         'player': Player.objects.filter(name=request.user)[0],
-#         'bets_answer': BetAnswer.objects.filter(player_name=request.user)
-#     }
-#     return HttpResponse(template.render(context, request))
+def daterange(date1, date2):
+    for n in range(int((date2 - date1).days) + 1):
+        yield date1 + timedelta(n)
 
-# @login_required(login_url='/')
-# def userbets(request):
-#     template = loader.get_template('bet/mybet.html')
-#     mybets = Bet.objects.filter(owner=request.user)
 
-#     context = {
-#         # 'all_bets': all_bets,
-#         'bets': mybets
-#     }
-#     return HttpResponse(template.render(context, request))
+@csrf_exempt
+@require_POST
+def get_export_range(request):
+    print("New Range ", request.POST)
 
-# @login_required(login_url='/')
-# def leaderboardView(request):
-#     template = loader.get_template('bet/leaderboard.html')
+    try:
+        if len(request.POST['start_date']) <= 0:
+            raise Exception("Missing start date")
+        elif len(request.POST['end_date']) <= 0:
+            raise Exception("Missing end date")
 
-#     context = {
-#         # 'all_bets': all_bets,
-#         'players': Player.objects.all().order_by('-wallet')
-#     }
-#     return HttpResponse(template.render(context, request))
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
 
-# @login_required(login_url='/')
-# def allbets(request):
-#     template = loader.get_template('bet/viewall.html')
-#     mybets = Bet.objects.all()
+        start_date = date(int(start_date.split('-')[0]),
+                          int(start_date.split('-')[1]),
+                          int(start_date.split('-')[2]))
+        end_date = date(int(end_date.split('-')[0]),
+                        int(end_date.split('-')[1]),
+                        int(end_date.split('-')[2]))
 
-#     context = {
-#         # 'all_bets': all_bets,
-#         'bets': mybets
-#     }
-#     return HttpResponse(template.render(context, request))
+        if start_date > end_date:
+            raise Exception("Start date is before End Date")
 
-# ~~~~~~~~~~~~~~~~~~~~
-# APIs
-# ~~~~~~~~~~~~~~~~~~~~
+        # Excel Prep -------
 
-# @csrf_exempt
-# @require_POST
-# def post_new_bet(request):
-#     # print("printing the request", request.body)
-#     # print(request.POST['bet_text'])
+        headers = get_saturdays(start_date, end_date)
+        headers = [i.strftime('%Y-%m-%d') for i in headers]
+        headers.insert(0, "Attendees")
+        row = ["" for i in range(len(headers))]
 
-#     # print(str(request.body.decode()).split('=')[1].replace("+"," "))
-#     try:
-#         if len(request.POST['bet_text']) <= 0:
-#             raise Exception("Empty Bet")
+        data = []
+        data = tablib.Dataset(*data, headers=headers)
 
-#         newbet = Bet.objects.create(bet_text=request.POST['bet_text'],
-#                                     owner=request.user,
-#                                     pub_date=datetime.now(),
-#                                     solution=None)
+      
 
-#         newbet.save()
+        records = AttendanceRecord.objects.all().values_list('member', 'record_date')
 
-#         messages.success(request, 'Your bet has been placed successfully !')
+        # ----- Aggregate Date
+        aggregator = {}
+        for record in records:
+          member = Attendee.objects.get(id=record[0])
+          # print(member.name)
+          if member.name in aggregator.keys():
+            aggregator[member.name].append(record[1].date().strftime('%Y-%m-%d'))
+          else:
+            aggregator[member.name] = [record[1].date().strftime('%Y-%m-%d')]
+          
+        # print(aggregator)
 
-#     except Exception as e:
-#         print("Failed to add new bet -->", e)
+        for key,val in aggregator.items():
+          row[0] = key
+          for one_date in val:
+            if one_date in headers:
+              index = headers.index(one_date)
+              row[index] = "YES"
+              
+          data.append(row)
+          row = ["" for i in range(len(headers))]
+          
+    
+        # for rec in list(records):
+        #   datetime_element = rec[1].date()  # Extracting the date
+        #   the_date = datetime_element.strftime('%Y-%m-%d')
+            
+        #   row[0] = Attendee.objects.get(id=rec[0]).name
+        #   print(data["Attendees"])
+        #   row[1] = the_date
+        #   # print(row)
+        #   data.append(row)
 
-#     return HttpResponseRedirect('/bets')
-#     # return HttpResponse(status=200)
+        response = HttpResponse(data.xlsx, content_type='application/vnd.ms-excel;charset=utf-8')
+        response['Content-Disposition'] = "attachment; filename=saturday-export.xlsx"
 
-# @csrf_exempt
-# @require_POST
-# def post_bet_choice(request):
-#     # print("printing the request", request.body)
-#     # print(request.POST['bet_choice'])
-#     try:
-#         thebet = Bet.objects.get(id=request.POST['bet_choice'].split('-')[1])
+        return response
 
-#         check_if_answered = BetAnswer.objects.filter(
-#             player_name=request.user).filter(
-#                 bet__id=int(request.POST['bet_choice'].split('-')[1]))
+    except Exception as e:
+        print("Failed to export full range error: -->", e)
 
-#         # print(check_if_answered[0].getdetails())
-
-#         if int(request.POST['bet_value']) > 0:
-#             print(request.POST['bet_value'])
-
-#             if not check_if_answered:
-
-#                 # Update player's wallet
-#                 current_player = Player.objects.filter(name=request.user)
-#                 p = current_player[0]
-#                 # print("before",p.wallet)
-
-#                 if p.wallet < int(request.POST['bet_value']):
-#                     raise Exception("Not Enough funds in wallet")
-
-#                 p.wallet = F('wallet') - int(request.POST['bet_value'])
-#                 # print("after",p.wallet)
-#                 p.save()
-
-#                 newanswer = BetAnswer.objects.create(
-#                     choice=request.POST['bet_choice'].split('-')[0],
-#                     bet=thebet,
-#                     player_name=request.user,
-#                     value=request.POST['bet_value'])
-
-#                 #Save submission
-#                 newanswer.save()
-
-#             else:
-#                 raise Exception("Already submitted")
-
-#                 messages.success(
-#                     request,
-#                     'Your bet choice has been changed placed successfully !')
-#     except Exception as e:
-#         print("placeing bet value failed -->", e)
-#     return HttpResponseRedirect('/account')
-
-# @csrf_exempt
-# @require_POST
-# def close_bet(request):
-#     thebet = Bet.objects.get(id=request.POST['bet_solution'].split('-')[1])
-
-#     solution = request.POST['bet_solution'].split('-')[0]
-
-#     thebet.solution = solution
-#     thebet.closed = True
-
-#     thebet.save()
-
-#     #~~~~~~~~~~~~~~ Calculate Winnings
-
-#     # answers = Bet.objects.filter(id =int(request.POST['bet_solution'].split('-')[1]))
-#     # answers = BetAnswer.objects.all()
-#     answers = BetAnswer.objects.filter(
-#         bet__id=int(request.POST['bet_solution'].split('-')[1]))
-
-#     # ~~~~~~~~~ Winner or loser
-#     for a in answers:
-#         choice = a.getdetails()
-#         if choice['player_choice'] == solution:
-#             print("winner winner chicken dinner", choice['player_name'])
-#             p = Player.objects.filter(name=choice['player_name'])[0]
-#             if choice['bet_owner'] == choice['player_name']:
-#                 p.wallet = p.wallet + (choice['bet_value'] * 2)
-#             else:
-#                 p.wallet = p.wallet + (choice['bet_value'] * 1.5)
-
-#             p.save()
-
-#     return HttpResponseRedirect('/account')
-
-# def detail(request, question_id):
-#     return HttpResponse("You're looking at question %s." % question_id)
-
-# def results(request, question_id):
-#     response = "You're looking at the results of question %s."
-#     return HttpResponse(response % question_id)
-
-# def vote(request, question_id):
-#     return HttpResponse("You're voting on question %s." % question_id)
+    return HttpResponseRedirect('/export-range')
