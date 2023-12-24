@@ -1,0 +1,36 @@
+{% extends "template.html" %}
+
+
+{% block title %} Export Users Attendance Date Range  {% endblock %}
+
+
+{% block content %}
+
+<div class="container"> 
+<h1> Select Date Range</h1> <br> <br>
+
+<form  action="/exportrange/" method="post" >
+  
+
+  <div class="input-group input-daterange">
+      <input type="date" class="form-control" name="start_date" value="2023-01-01"  placeholder="YYYY-MM-DD" required>
+      <div class="input-group-addon">to</div>
+      <input type="date" class="form-control" name="end_date" value="2023-12-31" placeholder="YYYY-MM-DD" required>
+  </div>
+
+  <br>
+  <br>
+
+
+  <button type="submit" class="btn btn-primary">Export Range</button>
+
+</form>
+
+  </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+ {% endblock %}
