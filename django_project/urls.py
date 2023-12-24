@@ -23,6 +23,9 @@ urlpatterns = [
     path('thankyou/', views.thankyou, name='thankyou'),
     path('newmember/', views.newmember, name='newmember'),
     path('export/', views.export, name='export'),
+    path('export-attendance/',views.export_attendance,name='export_attendance'),
+    path('export-records/', views.export_records, name='export-records'),
+    path('export-range/', views.export_date_range_page, name='export-range'),
     path('import/', views.data_import, name='import'),
     path('db/', views.download_database, name='download_db'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -31,6 +34,7 @@ urlpatterns = [
     path('addattendance/', views.add_attendance, name='addattendance'),
     path('addmember/', views.add_new_member, name='addnewmember'),
     path('importdata/', views.importdata, name='importdata'),
+    path('exportrange/', views.get_export_range, name='exportrange'),
 
     # ex: /bet/details/
     # path('bets/', views.details, name='details'),
